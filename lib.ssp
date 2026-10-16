@@ -480,3 +480,12 @@ test sliding_window = do
   (c, w3) = window_take(w2, 20)
   (d, _) = window_take(w3, 1000)
   a and b and not c and window_remaining(w2, 20) == 0 and window_wait_ms(w3, 20) == 980 and d and window_remaining(w3, 1010) == 2 and window_wait_ms(w, 0) == 0 and window_remaining(w, 0) == 2
+
+test run_hinted_handled = do
+  var slept = []
+  o = handle run_hinted(constant(10, 4), always_fails, e => e != "fail 3", x => some(42))
+  | retry_sleep(ms) => do
+    slept := slept.push(ms)
+    resume()
+  | retry_now() => resume(0)
+  o.stop == NotRetryable and o.attempts == 3 and slept == [42, 42]

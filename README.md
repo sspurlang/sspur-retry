@@ -111,7 +111,7 @@ A time before the last one seen refills nothing, so a clock that steps back neve
 
 - Shared state across threads or processes: the breaker and limiters are values; keep one per caller, or behind an `Atomic`, a channel or a database row.
 - Bulkheads, hedged requests and timeouts around a single attempt (SSPUR's `http.req` has `timeout_ms` and `retries` of its own for HTTP).
-- Generic `with_system_clock(f)` and `simulate(start, f)` that take any thunk: a compiler bug keeps a package's own effect out of its parameter types for now (see the repository notes), so write the six-line handler shown above for custom cases.
+- Generic `with_system_clock(f)` and `simulate(start, f)` that take any thunk: a compiler bug currently stops a package from using its own effect in the function types of its parameters, so write the six-line handler shown above for custom cases.
 
 ## Install
 
