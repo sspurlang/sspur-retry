@@ -51,7 +51,7 @@ pub fn no_retry() -> Policy
 = constant(0, 1)
 
 fn capped(p: Policy, x: F64) -> Int
-= if x.is_nan or x >= p.max_delay_ms.to_f64 then p.max_delay_ms else max(x.round, 0)
+= if x.is_nan or x >= p.max_delay_ms.to_f64 then p.max_delay_ms else if x <= 0.0 then 0 else x.round
 
 fn rand_upto(seed: Int, hi: Int) -> (Int, Int)
 = if hi <= 0 then (0, rand(seed).1) else rand_int(seed, 0, hi.saturating_add(1))
@@ -312,7 +312,8 @@ pub fn bucket_wait_ms(b: Bucket, now: Int, n: Int where _ >= 0) -> Opt[Int]
   post r.is_none or r.get >= 0
 = do
   have = bucket_tokens(b, now)
-  if n > b.capacity then none else if have >= n.to_f64 then some(0) else some(((n.to_f64 - have) * 1000.0 / b.per_sec).ceil)
+  t = (n.to_f64 - have) * 1000.0 / b.per_sec
+  if n > b.capacity then none else if have >= n.to_f64 then some(0) else some(if t < 9.2e18 then t.ceil else 9223372036854775807)
 
 // An empty sliding window limiter.
 pub fn window_limiter(limit: Int where _ >= 1, window_ms: Int where _ >= 1) -> Window
@@ -489,3 +490,5 @@ test run_hinted_handled = do
     resume()
   | retry_now() => resume(0)
   o.stop == NotRetryable and o.attempts == 3 and slept == [42, 42]
+
+test huge_waits_saturate = capped(constant(0, 3), -1e300) == 0 and bucket_wait_ms(Bucket{capacity: 1, per_sec: 1e-300, tokens: 0.0, updated_ms: 0}, 0, 1) == some(9223372036854775807)

@@ -1,5 +1,5 @@
 [package]
 name = "retry"
-version = "0.1.0"
+version = "0.1.1"
 description = "Retries with exponential backoff and jitter, retry budgets, a circuit breaker and rate limiters, on a clock effect that tests run virtually"
 license = "MIT"
